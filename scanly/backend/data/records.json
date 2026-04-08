@@ -1,18 +1,1 @@
-[
-  {
-    "id": "9b4905ec-bb3e-4400-92b1-b5d1e8f37db1",
-    "patientId": "e5412995-c6e7-4c21-9d53-b909823ea540",
-    "uploadedBy": "e5412995-c6e7-4c21-9d53-b909823ea540",
-    "uploaderRole": "patient",
-    "title": "scannly_logo",
-    "description": "",
-    "category": "General",
-    "filename": "9015298d-2110-4741-a3b9-c3c6977f4f32.png",
-    "originalName": "scannly_logo.png",
-    "mimetype": "image/png",
-    "size": 5776650,
-    "path": "/uploads/9015298d-2110-4741-a3b9-c3c6977f4f32.png",
-    "createdAt": "2026-04-08T09:38:38.326Z",
-    "tags": []
-  }
-]
+[]
