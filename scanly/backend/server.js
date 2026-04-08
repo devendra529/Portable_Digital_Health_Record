@@ -3,26 +3,50 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Ensure data directory and files exist
+// Ensure directories exist
 const dataDir = path.join(__dirname, 'data');
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
+// Ensure data files exist
 const usersFile = path.join(dataDir, 'users.json');
 const recordsFile = path.join(dataDir, 'records.json');
 
-if (!fs.existsSync(usersFile)) fs.writeFileSync(usersFile, JSON.stringify([]));
-if (!fs.existsSync(recordsFile)) fs.writeFileSync(recordsFile, JSON.stringify([]));
+if (!fs.existsSync(usersFile)) {
+  const adminHash = bcrypt.hashSync('admin123', 12);
+  fs.writeFileSync(usersFile, JSON.stringify([
+    {
+      id: 'admin-001-scanly-demo',
+      name: 'Admin User',
+      email: 'admin@scanly.app',
+      phone: '+91-9999999999',
+      password: adminHash,
+      role: 'admin',
+      verified: true,
+      createdAt: new Date().toISOString(),
+      qrCode: null,
+      avatar: null
+    }
+  ], null, 2));
+  console.log('✅ Admin user created');
+}
+
+if (!fs.existsSync(recordsFile)) {
+  fs.writeFileSync(recordsFile, JSON.stringify([]));
+}
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: '*',
+  credentials: false,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

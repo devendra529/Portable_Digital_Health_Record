@@ -10,19 +10,29 @@ const router = express.Router();
 // Signup
 router.post('/signup', async (req, res) => {
   try {
-    const { name, email, phone, password, role = 'patient', specialization, licenseNumber, bloodGroup, dateOfBirth, gender } = req.body;
-    if (!name || !email || !password) return res.status(400).json({ error: 'Name, email and password required' });
+    const { name, email, phone, password, role = 'patient',
+      specialization, licenseNumber, bloodGroup, dateOfBirth, gender } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email and password required' });
+    }
 
     const users = readJSON('users.json');
-    if (users.find(u => u.email === email)) return res.status(400).json({ error: 'Email already exists' });
+    const emailLower = email.toLowerCase().trim();
+
+    if (users.find(u => u.email === emailLower)) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = {
       id: uuidv4(),
-      name, email, phone,
+      name,
+      email: emailLower,
+      phone,
       password: hashedPassword,
       role,
-      verified: role === 'patient',
+      verified: true,
       doctorVerified: role === 'doctor' ? false : undefined,
       specialization: role === 'doctor' ? specialization : undefined,
       licenseNumber: role === 'doctor' ? licenseNumber : undefined,
@@ -37,10 +47,15 @@ router.post('/signup', async (req, res) => {
     users.push(newUser);
     writeJSON('users.json', users);
 
-    const token = jwt.sign({ id: newUser.id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(
+      { id: newUser.id, role: newUser.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
     const { password: _, ...userWithoutPassword } = newUser;
     res.status(201).json({ token, user: userWithoutPassword });
   } catch (err) {
+    console.error('Signup error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -49,17 +64,27 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
     const users = readJSON('users.json');
-    const user = users.find(u => u.email === email);
-    if (!user) return res.status(400).json({ error: 'Invalid credentials' });
-
+    const user = users.find(u => u.email === email.toLowerCase().trim());
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
-
-    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
     const { password: _, ...userWithoutPassword } = user;
     res.json({ token, user: userWithoutPassword });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: err.message });
   }
 });
